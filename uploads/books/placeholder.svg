@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
+  <rect width="400" height="600" fill="#E2E8F0"/>
+  <rect x="40" y="40" width="320" height="520" fill="#CBD5E1" rx="8"/>
+  <text x="200" y="290" font-family="Arial, sans-serif" font-size="22" fill="#64748B" text-anchor="middle">Sin portada</text>
+  <text x="200" y="320" font-family="Arial, sans-serif" font-size="22" fill="#64748B" text-anchor="middle">disponible</text>
+</svg>

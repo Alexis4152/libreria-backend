@@ -1,0 +1,6 @@
+target/
+*.log
+.env
+uploads/**
+!uploads/books/
+!uploads/books/placeholder.svg
