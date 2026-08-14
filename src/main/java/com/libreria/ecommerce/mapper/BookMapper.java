@@ -4,6 +4,7 @@ import com.libreria.ecommerce.dto.response.*;
 import com.libreria.ecommerce.entity.Book;
 import com.libreria.ecommerce.entity.BookImage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
@@ -19,6 +20,9 @@ public class BookMapper {
     private final PublisherMapper publisherMapper;
     private final AuthorMapper authorMapper;
 
+    @Value("${app.public-url}")
+    private String publicUrl;
+
     public BookSummaryResponse toSummary(Book book) {
         return BookSummaryResponse.builder()
                 .id(book.getId())
@@ -31,7 +35,7 @@ public class BookMapper {
                 .price(book.getPrice())
                 .promoPrice(book.getPromoPrice())
                 .stock(book.getStock())
-                .coverImageUrl(coverImageUrl(book))
+                .coverImageUrl(absolute(coverImageUrl(book)))
                 .featured(Boolean.TRUE.equals(book.getIsFeatured()))
                 .newRelease(Boolean.TRUE.equals(book.getIsNew()))
                 .build();
@@ -42,7 +46,7 @@ public class BookMapper {
                 .sorted(Comparator.comparing(BookImage::getSortOrder))
                 .map(img -> BookImageResponse.builder()
                         .id(img.getId())
-                        .url(img.getUrl())
+                        .url(absolute(img.getUrl()))
                         .primary(Boolean.TRUE.equals(img.getIsPrimary()))
                         .sortOrder(img.getSortOrder())
                         .altText(img.getAltText())
@@ -79,6 +83,13 @@ public class BookMapper {
                 .images(images)
                 .relatedBooks(relatedBooks)
                 .build();
+    }
+
+    private String absolute(String url) {
+        if (url == null || url.isBlank() || url.startsWith("http") || publicUrl.isBlank()) {
+            return url;
+        }
+        return publicUrl + url;
     }
 
     private String joinAuthorNames(Book book) {
