@@ -16,6 +16,7 @@ import com.libreria.ecommerce.repository.OrderStatusHistoryRepository;
 import com.libreria.ecommerce.repository.PaymentRepository;
 import com.libreria.ecommerce.security.SecurityUtils;
 import com.libreria.ecommerce.service.OrderService;
+import com.libreria.ecommerce.service.OrderSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,7 +70,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public Page<OrderSummaryResponse> adminList(OrderStatus status, String q, LocalDateTime dateFrom, LocalDateTime dateTo, Pageable pageable) {
         String like = (q == null || q.isBlank()) ? null : "%" + q.trim().toLowerCase() + "%";
-        Page<Order> orders = orderRepository.search(status, like, dateFrom, dateTo, pageable);
+        Page<Order> orders = orderRepository.findAll(OrderSpecifications.search(status, like, dateFrom, dateTo), pageable);
         return orders.map(order -> orderMapper.toSummary(order, orderItemRepository.findByOrder_Id(order.getId()).size()));
     }
 
