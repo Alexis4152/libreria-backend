@@ -34,4 +34,6 @@ public interface BookService {
     BookImageResponse addImage(Long bookId, MultipartFile file, boolean primary);
 
     void deleteImage(Long bookId, Long imageId);
+
+    BookImageResponse setPrimaryImage(Long bookId, Long imageId);
 }

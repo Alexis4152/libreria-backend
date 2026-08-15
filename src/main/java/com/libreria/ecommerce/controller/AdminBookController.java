@@ -72,4 +72,9 @@ public class AdminBookController {
         bookService.deleteImage(id, imageId);
         return ApiResponse.ok(null, "Imagen eliminada");
     }
+
+    @PatchMapping("/{id}/images/{imageId}/primary")
+    public ApiResponse<BookImageResponse> setPrimaryImage(@PathVariable Long id, @PathVariable Long imageId) {
+        return ApiResponse.ok(bookService.setPrimaryImage(id, imageId), "Imagen principal actualizada");
+    }
 }

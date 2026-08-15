@@ -22,6 +22,8 @@ import com.libreria.ecommerce.security.SecurityUtils;
 import com.libreria.ecommerce.service.BookService;
 import com.libreria.ecommerce.service.BookSpecifications;
 import com.libreria.ecommerce.service.FileStorageService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +48,9 @@ public class BookServiceImpl implements BookService {
     private final AuthorRepository authorRepository;
     private final BookMapper bookMapper;
     private final FileStorageService fileStorageService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // Lecturas anotadas @Transactional(readOnly = true): con spring.jpa.open-in-view=false
     // la sesión de Hibernate se cierra al terminar la consulta del repositorio, así que el
@@ -166,8 +171,13 @@ public class BookServiceImpl implements BookService {
                 .sortOrder(book.getImages().size())
                 .altText(book.getTitle())
                 .build();
+        // No usar bookRepository.save(book) aqui: book ya esta managed en esta transaccion,
+        // asi que save() ejecuta entityManager.merge(book), y merge() cascada como MERGE
+        // (no PERSIST) hacia la coleccion images. Para una BookImage transitoria, merge()
+        // crea una copia interna y le asigna el id generado A LA COPIA, dejando esta
+        // instancia "image" con id null para siempre. persist() directo evita esa copia.
+        entityManager.persist(image);
         book.getImages().add(image);
-        bookRepository.save(book);
 
         return BookImageResponse.builder()
                 .id(image.getId()).url(bookMapper.absolute(image.getUrl())).primary(Boolean.TRUE.equals(image.getIsPrimary()))
@@ -184,6 +194,23 @@ public class BookServiceImpl implements BookService {
             throw new ResourceNotFoundException("Imagen no encontrada: " + imageId);
         }
         bookRepository.save(book);
+    }
+
+    @Override
+    @Transactional
+    public BookImageResponse setPrimaryImage(Long bookId, Long imageId) {
+        Book book = findActive(bookId);
+        BookImage target = book.getImages().stream()
+                .filter(img -> img.getId().equals(imageId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada: " + imageId));
+        book.getImages().forEach(img -> img.setIsPrimary(img.getId().equals(imageId)));
+        bookRepository.save(book);
+
+        return BookImageResponse.builder()
+                .id(target.getId()).url(bookMapper.absolute(target.getUrl())).primary(true)
+                .sortOrder(target.getSortOrder()).altText(target.getAltText())
+                .build();
     }
 
     private void applyRequest(Book book, BookRequest request) {
