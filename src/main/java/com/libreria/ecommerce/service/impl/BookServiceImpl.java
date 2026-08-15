@@ -36,7 +36,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -198,19 +201,29 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public BookImageResponse setPrimaryImage(Long bookId, Long imageId) {
+    public List<BookImageResponse> reorderImages(Long bookId, List<Long> imageIds) {
         Book book = findActive(bookId);
-        BookImage target = book.getImages().stream()
-                .filter(img -> img.getId().equals(imageId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada: " + imageId));
-        book.getImages().forEach(img -> img.setIsPrimary(img.getId().equals(imageId)));
+        Map<Long, BookImage> byId = book.getImages().stream()
+                .collect(Collectors.toMap(BookImage::getId, img -> img));
+        if (imageIds.size() != byId.size() || !byId.keySet().containsAll(imageIds)) {
+            throw new BusinessException("La lista de imagenes no coincide con las imagenes del libro");
+        }
+        // La posicion 0 (primera de la lista) siempre queda como principal: el orden
+        // define cual es la portada, no un flag independiente que se pueda desincronizar.
+        for (int i = 0; i < imageIds.size(); i++) {
+            BookImage img = byId.get(imageIds.get(i));
+            img.setSortOrder(i);
+            img.setIsPrimary(i == 0);
+        }
         bookRepository.save(book);
 
-        return BookImageResponse.builder()
-                .id(target.getId()).url(bookMapper.absolute(target.getUrl())).primary(true)
-                .sortOrder(target.getSortOrder()).altText(target.getAltText())
-                .build();
+        return book.getImages().stream()
+                .sorted(Comparator.comparing(BookImage::getSortOrder))
+                .map(img -> BookImageResponse.builder()
+                        .id(img.getId()).url(bookMapper.absolute(img.getUrl())).primary(Boolean.TRUE.equals(img.getIsPrimary()))
+                        .sortOrder(img.getSortOrder()).altText(img.getAltText())
+                        .build())
+                .toList();
     }
 
     private void applyRequest(Book book, BookRequest request) {

@@ -3,6 +3,7 @@ package com.libreria.ecommerce.controller;
 import com.libreria.ecommerce.dto.ApiResponse;
 import com.libreria.ecommerce.dto.PageResponse;
 import com.libreria.ecommerce.dto.request.BookRequest;
+import com.libreria.ecommerce.dto.request.ImageOrderRequest;
 import com.libreria.ecommerce.dto.request.StockAdjustRequest;
 import com.libreria.ecommerce.dto.response.BookDetailResponse;
 import com.libreria.ecommerce.dto.response.BookImageResponse;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 
 @RestController
@@ -73,8 +76,9 @@ public class AdminBookController {
         return ApiResponse.ok(null, "Imagen eliminada");
     }
 
-    @PatchMapping("/{id}/images/{imageId}/primary")
-    public ApiResponse<BookImageResponse> setPrimaryImage(@PathVariable Long id, @PathVariable Long imageId) {
-        return ApiResponse.ok(bookService.setPrimaryImage(id, imageId), "Imagen principal actualizada");
+    @PutMapping("/{id}/images/order")
+    public ApiResponse<List<BookImageResponse>> reorderImages(@PathVariable Long id,
+                                                                 @Valid @RequestBody ImageOrderRequest request) {
+        return ApiResponse.ok(bookService.reorderImages(id, request.getImageIds()), "Orden de imagenes actualizado");
     }
 }

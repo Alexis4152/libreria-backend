@@ -35,5 +35,5 @@ public interface BookService {
 
     void deleteImage(Long bookId, Long imageId);
 
-    BookImageResponse setPrimaryImage(Long bookId, Long imageId);
+    List<BookImageResponse> reorderImages(Long bookId, List<Long> imageIds);
 }
