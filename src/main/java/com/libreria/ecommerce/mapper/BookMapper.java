@@ -85,7 +85,7 @@ public class BookMapper {
                 .build();
     }
 
-    private String absolute(String url) {
+    public String absolute(String url) {
         if (url == null || url.isBlank() || url.startsWith("http") || publicUrl.isBlank()) {
             return url;
         }

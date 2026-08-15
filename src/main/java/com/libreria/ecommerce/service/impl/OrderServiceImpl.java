@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,9 +67,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderSummaryResponse> adminList(OrderStatus status, String q, Pageable pageable) {
+    public Page<OrderSummaryResponse> adminList(OrderStatus status, String q, LocalDateTime dateFrom, LocalDateTime dateTo, Pageable pageable) {
         String like = (q == null || q.isBlank()) ? null : "%" + q.trim().toLowerCase() + "%";
-        Page<Order> orders = orderRepository.search(status, like, pageable);
+        Page<Order> orders = orderRepository.search(status, like, dateFrom, dateTo, pageable);
         return orders.map(order -> orderMapper.toSummary(order, orderItemRepository.findByOrder_Id(order.getId()).size()));
     }
 

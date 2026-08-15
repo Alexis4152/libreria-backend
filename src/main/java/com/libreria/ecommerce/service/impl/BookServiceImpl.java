@@ -170,7 +170,7 @@ public class BookServiceImpl implements BookService {
         bookRepository.save(book);
 
         return BookImageResponse.builder()
-                .id(image.getId()).url(image.getUrl()).primary(Boolean.TRUE.equals(image.getIsPrimary()))
+                .id(image.getId()).url(bookMapper.absolute(image.getUrl())).primary(Boolean.TRUE.equals(image.getIsPrimary()))
                 .sortOrder(image.getSortOrder()).altText(image.getAltText())
                 .build();
     }

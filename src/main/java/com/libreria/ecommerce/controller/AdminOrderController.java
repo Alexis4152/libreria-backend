@@ -11,7 +11,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/admin/orders")
@@ -24,9 +27,14 @@ public class AdminOrderController {
     public ApiResponse<PageResponse<OrderSummaryResponse>> list(
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) String q,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        var result = orderService.adminList(status, q, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        var result = orderService.adminList(status, q,
+                dateFrom != null ? dateFrom.atStartOfDay() : null,
+                dateTo != null ? dateTo.atTime(23, 59, 59) : null,
+                PageRequest.of(page, size, Sort.by("createdAt").descending()));
         return ApiResponse.ok(PageResponse.of(result));
     }
 

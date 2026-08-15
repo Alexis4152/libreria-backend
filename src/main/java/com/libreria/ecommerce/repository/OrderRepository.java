@@ -24,8 +24,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             AND (:like IS NULL OR LOWER(o.folio) LIKE :like
                  OR LOWER(o.buyerFirstName) LIKE :like OR LOWER(o.buyerLastName) LIKE :like
                  OR LOWER(o.buyerEmail) LIKE :like)
+            AND (:dateFrom IS NULL OR o.createdAt >= :dateFrom)
+            AND (:dateTo IS NULL OR o.createdAt <= :dateTo)
             """)
-    Page<Order> search(@Param("status") OrderStatus status, @Param("like") String like, Pageable pageable);
+    Page<Order> search(@Param("status") OrderStatus status, @Param("like") String like,
+                        @Param("dateFrom") LocalDateTime dateFrom, @Param("dateTo") LocalDateTime dateTo,
+                        Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(o.total), 0) FROM Order o " +
            "WHERE o.paymentStatus = com.libreria.ecommerce.enums.PaymentStatus.APROBADO " +
